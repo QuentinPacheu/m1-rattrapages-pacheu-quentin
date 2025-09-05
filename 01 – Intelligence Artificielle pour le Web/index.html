@@ -8,8 +8,43 @@
 <body>
     <h1>Test API Groq</h1>
     
-    <button onclick="testAPI()">Tester l'API</button>
-    
+    <div>
+        <h2>Test API</h2>
+        <button onclick="testAPI()">Tester l'API</button>
+        <span id="api-status" style="margin-left: 15px; font-weight: bold;"></span>
+    </div>
+
+    <hr>
+
+    <div>
+        <h2>Configuration du Quiz</h2>
+        
+        <div style="margin-bottom: 10px;">
+            <label for="domain">Domaine :</label><br>
+            <input type="text" id="domain" placeholder="Ex: Mathématiques, Histoire..." style="width: 300px; padding: 5px;">
+        </div>
+        
+        <div style="margin-bottom: 10px;">
+            <label for="question-count">Questions :</label><br>
+            <select id="question-count" style="padding: 5px;">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="15">15</option>
+            </select>
+        </div>
+        
+        <button onclick="validateConfig()">Valider Configuration</button>
+        <button onclick="generateQuiz()" id="generate-btn" disabled>Générer Quiz</button>
+    </div>
+
+    <hr>
+
+    <div>
+        <h2>Informations</h2>
+        <div id="config-info" style="background-color: #f0f0f0; padding: 10px;">
+            <em>Configurez votre quiz ci-dessus...</em>
+        </div>
+    </div>
 
     <script src="script.js"></script>
     <script src="config.js"></script>
