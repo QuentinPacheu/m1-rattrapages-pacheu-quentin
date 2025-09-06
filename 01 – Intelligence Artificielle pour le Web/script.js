@@ -6,6 +6,11 @@ let quizConfig = {
     isValid: false
 };
 
+let currentQuizData = [];
+let currentQuestionIndex = 0;
+let userAnswers = [];
+let score = 0;
+
 // Test API
 async function testAPI() {
     const GROQ_API_KEY = CONFIG.GROQ_API_KEY;
@@ -71,17 +76,15 @@ async function testAPI() {
     }
 }
 
-// Validation de la configuration
+// Validation 
 function validateConfig() {
     console.log("=== VALIDATION CONFIGURATION ===");
     
-    // Récupérer les valeurs (SANS difficulty)
     const domain = document.getElementById('domain').value.trim();
     const questionCount = parseInt(document.getElementById('question-count').value);
     
     console.log("Valeurs saisies:", { domain, questionCount });
     
-    // Validation du domaine
     if (!domain) {
         alert("Veuillez entrer un domaine");
         document.getElementById('domain').focus();
@@ -94,7 +97,6 @@ function validateConfig() {
         return;
     }
     
-    // Met à jour la configuration (SANS difficulty)
     quizConfig = {
         domain: domain,
         questionCount: questionCount,
@@ -104,93 +106,267 @@ function validateConfig() {
     console.log("✅ Configuration validée:", quizConfig);
     
     updateConfigDisplay();
-
     document.getElementById('generate-btn').disabled = false;
     
     alert("Configuration validée !");
 }
 
-// Met à jour l'affichage des informations de configuration
-function updateConfigDisplay() {
-    const infoElement = document.getElementById('config-info');
+// Génération quiz 
+async function generateQuiz() {
     
-    if (quizConfig.isValid) {
-        infoElement.innerHTML = `
-            <h4>Configuration actuelle :</h4>
-            <strong>Domaine :</strong> ${quizConfig.domain}<br>
-            <strong>Questions :</strong> ${quizConfig.questionCount}<br>
-            <span style="color: green;">✅ Prêt pour génération</span>
-        `;
-    } else {
-        infoElement.innerHTML = '<em>Configurez votre quiz ci-dessus...</em>';
-    }
-}
-
-// Génération de quiz
-function generateQuiz() {
-    console.log("=== GÉNÉRATION QUIZ ===");
+    const domain = document.getElementById('domain').value.trim();
+    const questionCount = parseInt(document.getElementById('question-count').value);
     
-    if (!quizConfig.isValid) {
-        alert("Validez d'abord la configuration");
+    console.log("=== GÉNÉRATION QUIZ DIRECTE ===");
+    console.log("Valeurs saisies:", { domain, questionCount });
+    
+    if (!domain) {
+        alert("Veuillez entrer un domaine pour le quiz");
+        document.getElementById('domain').focus();
         return;
     }
     
-    console.log("Configuration pour génération:", quizConfig);
-    console.log("🚧 Génération sera implémentée en version 3");
+    if (domain.length < 3) {
+        alert("Le domaine doit avoir au moins 3 caractères");
+        document.getElementById('domain').focus();
+        return;
+    }
     
-    alert(`Quiz prêt à générer !\nDomaine: ${quizConfig.domain}\nQuestions: ${quizConfig.questionCount}\n`);
+    
+    quizConfig = {
+        domain: domain,
+        questionCount: questionCount,
+        isValid: true
+    };
+    
+    console.log("✅ Configuration validée automatiquement:", quizConfig);
+    
+    showSection('loading');
+    
+    try {
+        const prompt = `Crée un quiz de ${quizConfig.questionCount} questions à choix multiples sur "${quizConfig.domain}".
+        Format JSON: {"questions": [{"question": "...", "options": ["A","B","C","D"], "correct": 0, "explanation": "..."}]}
+        Réponds UNIQUEMENT avec le JSON.`;
+        
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${CONFIG.GROQ_API_KEY}`
+            },
+            body: JSON.stringify({
+                model: 'llama-3.1-8b-instant',
+                messages: [
+                    { role: 'system', content: 'Tu réponds uniquement en JSON valide.' },
+                    { role: 'user', content: prompt }
+                ],
+                max_tokens: 2000,
+                temperature: 0.7
+            })
+        });
+        
+        if (!response.ok) throw new Error(`Erreur ${response.status}`);
+        
+        const data = await response.json();
+        let content = data.choices[0].message.content;
+        
+        // Nettoyage du JSON
+        content = content.replace(/```json|```/g, '').trim();
+        const jsonStart = content.indexOf('{');
+        const jsonEnd = content.lastIndexOf('}') + 1;
+        if (jsonStart !== -1 && jsonEnd > jsonStart) {
+            content = content.substring(jsonStart, jsonEnd);
+        }
+        
+        const quizData = JSON.parse(content);
+        
+        if (!quizData.questions || quizData.questions.length === 0) {
+            throw new Error('Pas de questions générées');
+        }
+        
+        // Démarrage du quiz
+        currentQuizData = quizData.questions.slice(0, quizConfig.questionCount);
+        currentQuestionIndex = 0;
+        userAnswers = [];
+        score = 0;
+        
+        document.getElementById('quizTitle').textContent = quizConfig.domain;
+        document.getElementById('totalQuestions').textContent = currentQuizData.length;
+        document.getElementById('totalScore').textContent = currentQuizData.length;
+        
+        startQuiz();
+        
+    } catch (error) {
+        console.error('Erreur:', error);
+        showSection('setup');
+        alert('Erreur: ' + error.message);
+    }
 }
 
-// Réinitialise la configuration
+function startQuiz() {
+    showSection('quiz');
+    showQuestion();
+}
+
+function showQuestion() {
+    const question = currentQuizData[currentQuestionIndex];
+    
+    document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+    document.getElementById('questionText').textContent = question.question;
+    
+    const container = document.getElementById('answersContainer');
+    container.innerHTML = '';
+    
+    question.options.forEach((option, index) => {
+        const label = document.createElement('label');
+        label.innerHTML = `
+            <input type="radio" name="answer" value="${index}" onchange="enableNext()">
+            ${String.fromCharCode(65 + index)}. ${option}
+        `;
+        label.style.display = 'block';
+        label.style.margin = '10px 0';
+        container.appendChild(label);
+    });
+    
+    document.getElementById('nextButton').disabled = true;
+}
+
+function enableNext() {
+    document.getElementById('nextButton').disabled = false;
+}
+
+function nextQuestion() {
+    const selected = document.querySelector('input[name="answer"]:checked');
+    
+    if (!selected) {
+        alert('Sélectionnez une réponse');
+        return;
+    }
+    
+    const answerIndex = parseInt(selected.value);
+    const isCorrect = answerIndex === currentQuizData[currentQuestionIndex].correct;
+    
+    userAnswers.push({
+        questionIndex: currentQuestionIndex,
+        selectedAnswer: answerIndex,
+        isCorrect: isCorrect
+    });
+    
+    if (isCorrect) score++;
+    
+    currentQuestionIndex++;
+    
+    if (currentQuestionIndex < currentQuizData.length) {
+        showQuestion();
+    } else {
+        showResults();
+    }
+}
+
+function showResults() {
+    showSection('results');
+    
+    document.getElementById('finalScore').textContent = score;
+    
+    const percentage = (score / currentQuizData.length) * 100;
+    let message = '';
+    if (percentage >= 90) message = '🏆 Excellent !';
+    else if (percentage >= 70) message = '🎉 Très bien !';
+    else if (percentage >= 50) message = '👍 Pas mal !';
+    else message = '⚠️ À réviser !';
+    
+    document.getElementById('scoreMessage').textContent = message;
+    
+    // Récapitulatif
+    const container = document.getElementById('reviewContainer');
+    container.innerHTML = '';
+    
+    userAnswers.forEach((answer, index) => {
+        const question = currentQuizData[answer.questionIndex];
+        const div = document.createElement('div');
+        div.style.marginBottom = '15px';
+        div.style.padding = '10px';
+        div.style.border = answer.isCorrect ? '2px solid green' : '2px solid red';
+        
+        div.innerHTML = `
+            <strong>Q${index + 1}:</strong> ${question.question}<br>
+            <strong>Votre réponse:</strong> ${String.fromCharCode(65 + answer.selectedAnswer)}. ${question.options[answer.selectedAnswer]}<br>
+            <strong>Correcte:</strong> ${String.fromCharCode(65 + question.correct)}. ${question.options[question.correct]}<br>
+            <strong>Explication:</strong> ${question.explanation}
+        `;
+        
+        container.appendChild(div);
+    });
+}
+
+function restartQuiz() {
+    showSection('setup');
+    document.getElementById('domain').value = '';
+    updateConfigDisplay();
+}
+
+function showSection(name) {
+    ['setup', 'loading', 'quiz', 'results'].forEach(section => {
+        const el = document.getElementById(section);
+        if (el) el.style.display = section === name ? 'block' : 'none';
+    });
+}
+
+function updateConfigDisplay() {
+    const infoElement = document.getElementById('config-info');
+    
+    const domain = document.getElementById('domain').value.trim();
+    const questionCount = document.getElementById('question-count').value;
+    
+    if (domain) {
+        infoElement.innerHTML = `
+            <h4>Configuration actuelle :</h4>
+            <strong>Domaine :</strong> ${domain}<br>
+            <strong>Questions :</strong> ${questionCount}<br>
+            <span style="color: green;">✅ Prêt à générer</span>
+        `;
+    } else {
+        infoElement.innerHTML = '<em>Entrez un domaine et cliquez sur "Générer Quiz"</em>';
+    }
+}
+
+// Reset 
 function resetConfig() {
     document.getElementById('domain').value = '';
     document.getElementById('question-count').value = '10';
-    
-    quizConfig.isValid = false;
-    document.getElementById('generate-btn').disabled = true;
     
     updateConfigDisplay();
     console.log("🔄 Configuration réinitialisée");
 }
 
+// Listeners 
 function setupListeners() {
     const inputs = ['domain', 'question-count'];
     
     inputs.forEach(id => {
         const element = document.getElementById(id);
         if (element) {
-            element.addEventListener('input', () => {
-                if (quizConfig.isValid) {
-                    console.log("⚠️ Configuration modifiée");
-                    quizConfig.isValid = false;
-                    document.getElementById('generate-btn').disabled = true;
-                    updateConfigDisplay();
-                }
-            });
+            element.addEventListener('input', updateConfigDisplay);
         }
     });
     
-    // Validation dans le champ domaine
+    // Génération avec Enter dans le champ domaine
     const domainInput = document.getElementById('domain');
     if (domainInput) {
         domainInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                validateConfig();
+                generateQuiz();
             }
         });
     }
 }
 
 window.addEventListener('DOMContentLoaded', function() {
-    console.log("✨ Nouvelles fonctionnalités:");
-    console.log("- Configuration de quiz");
-    console.log("- Validation des entrées");
-    console.log("- Interface utilisateur étendue");
     
     setupListeners();
     updateConfigDisplay();
     
-    // bouton reset
+    // Bouton reset
     const configSection = document.querySelector('div:nth-of-type(2)');
     if (configSection && !document.getElementById('reset-btn')) {
         const resetBtn = document.createElement('button');

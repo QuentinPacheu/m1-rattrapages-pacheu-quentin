@@ -6,44 +6,67 @@
     <title>m1-rattrapages-pacheu-quentin</title>
 </head>
 <body>
-    <h1>Test API Groq</h1>
+    <h1>Générateur de Quiz</h1>
     
-    <div>
-        <h2>Test API</h2>
-        <button onclick="testAPI()">Tester l'API</button>
-        <span id="api-status" style="margin-left: 15px; font-weight: bold;"></span>
+    <div id="setup">
+        <div>
+            <h2>Test API</h2>
+            <button onclick="testAPI()">Tester l'API</button>
+            <span id="api-status" style="margin-left: 15px; font-weight: bold;"></span>
+        </div>
+
+        <hr>
+
+        <div>
+            <h2>Configuration du Quiz</h2>
+            
+            <div style="margin-bottom: 10px;">
+                <label for="domain">Domaine :</label><br>
+                <input type="text" id="domain" placeholder="Ex: Mathématiques, Histoire..." style="width: 300px; padding: 5px;">
+            </div>
+            
+            <div style="margin-bottom: 10px;">
+                <label for="question-count">Questions :</label><br>
+                <select id="question-count" style="padding: 5px;">
+                    <option value="5">5</option>
+                    <option value="10" selected>10</option>
+                    <option value="15">15</option>
+                </select>
+            </div>
+            
+            <button onclick="generateQuiz()" id="generate-btn">Générer Quiz</button>
+            <!-- <button onclick="validateConfig()">Valider Configuration</button> -->
+        </div>
+
+        <hr>
+
+        <div>
+            <h2>Informations</h2>
+            <div id="config-info" style="background-color: #f0f0f0; padding: 10px;">
+                <em>Configurez votre quiz ci-dessus...</em>
+            </div>
+        </div>
     </div>
 
-    <hr>
-
-    <div>
-        <h2>Configuration du Quiz</h2>
-        
-        <div style="margin-bottom: 10px;">
-            <label for="domain">Domaine :</label><br>
-            <input type="text" id="domain" placeholder="Ex: Mathématiques, Histoire..." style="width: 300px; padding: 5px;">
-        </div>
-        
-        <div style="margin-bottom: 10px;">
-            <label for="question-count">Questions :</label><br>
-            <select id="question-count" style="padding: 5px;">
-                <option value="5">5</option>
-                <option value="10" selected>10</option>
-                <option value="15">15</option>
-            </select>
-        </div>
-        
-        <button onclick="validateConfig()">Valider Configuration</button>
-        <button onclick="generateQuiz()" id="generate-btn" disabled>Générer Quiz</button>
+    <div id="loading" style="display: none;">
+        <h2>⏳ Génération en cours...</h2>
+        <p>L'IA prépare vos questions...</p>
     </div>
 
-    <hr>
+    <div id="quiz" style="display: none;">
+        <h2>Quiz : <span id="quizTitle"></span></h2>
+        <p>Question <span id="currentQuestion">1</span> / <span id="totalQuestions">10</span></p>
+        <h3 id="questionText"></h3>
+        <div id="answersContainer"></div>
+        <button id="nextButton" onclick="nextQuestion()" disabled>Question suivante</button>
+        <button onclick="restartQuiz()">Changer de Quiz</button>
+    </div>
 
-    <div>
-        <h2>Informations</h2>
-        <div id="config-info" style="background-color: #f0f0f0; padding: 10px;">
-            <em>Configurez votre quiz ci-dessus...</em>
-        </div>
+    <div id="results" style="display: none;">
+        <h2>Résultats : <span id="finalScore"></span> / <span id="totalScore">10</span></h2>
+        <p id="scoreMessage"></p>
+        <div id="reviewContainer"></div>
+        <button onclick="restartQuiz()">Nouveau Quiz</button>
     </div>
 
     <script src="script.js"></script>
