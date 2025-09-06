@@ -172,6 +172,7 @@ async function generateQuiz() {
         
         // Nettoyage du JSON
         content = content.replace(/```json|```/g, '').trim();
+        // Extraction sécurisée du contenu JSON
         const jsonStart = content.indexOf('{');
         const jsonEnd = content.lastIndexOf('}') + 1;
         if (jsonStart !== -1 && jsonEnd > jsonStart) {
@@ -219,12 +220,13 @@ function showQuestion() {
     
     question.options.forEach((option, index) => {
         const label = document.createElement('label');
+        label.setAttribute('data-letter', String.fromCharCode(65 + index));
         label.innerHTML = `
-            <input type="radio" name="answer" value="${index}" onchange="enableNext()">
-            ${String.fromCharCode(65 + index)}. ${option}
+            <input type="radio" name="answer" value="${index}" onchange="selectAnswer(this)">
+            <span>${option}</span>
         `;
-        label.style.display = 'block';
-        label.style.margin = '10px 0';
+        label.style.display = 'flex';
+        label.style.alignItems = 'center';
         container.appendChild(label);
     });
     
@@ -385,3 +387,18 @@ window.addEventListener('DOMContentLoaded', function() {
         }
     }
 });
+
+
+function selectAnswer(radioInput) {
+    // Retirer la classe selected de tous les labels
+    const allLabels = document.querySelectorAll('#answersContainer label');
+    allLabels.forEach(label => {
+        label.classList.remove('selected');
+    });
+    
+    // Ajouter la classe selected au label parent du radio sélectionné
+    radioInput.parentElement.classList.add('selected');
+    
+    // Activer le bouton suivant
+    enableNext();
+}
