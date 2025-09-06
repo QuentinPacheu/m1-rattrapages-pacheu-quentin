@@ -315,6 +315,10 @@ function showSection(name) {
 function updateConfigDisplay() {
     const infoElement = document.getElementById('config-info');
     
+    if (!infoElement) {
+        return;
+    }
+    
     const domain = document.getElementById('domain').value.trim();
     const questionCount = document.getElementById('question-count').value;
     
