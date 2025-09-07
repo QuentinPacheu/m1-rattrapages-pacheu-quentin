@@ -13,7 +13,7 @@ let score = 0;
 
 // Test API
 async function testAPI() {
-    const GROQ_API_KEY = CONFIG.GROQ_API_KEY;
+    const GROQ_API_KEY = GROQ_API_KEY;
     console.clear();
     console.log("=== TEST API GROQ ===");
     console.log("🔄 Test en cours...");
