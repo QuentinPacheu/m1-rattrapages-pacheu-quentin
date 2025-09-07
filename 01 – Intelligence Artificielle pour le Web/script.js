@@ -1,4 +1,5 @@
 const API_URL = "https://api.groq.com/openai/v1/chat/completions";
+const GROQ_API_KEY = "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";
 
 let quizConfig = {
     domain: '',
@@ -13,7 +14,6 @@ let score = 0;
 
 // Test API
 async function testAPI() {
-    const GROQ_API_KEY = "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";
     console.clear();
     console.log("=== TEST API GROQ ===");
     console.log("🔄 Test en cours...");
@@ -152,7 +152,7 @@ async function generateQuiz() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${CONFIG.GROQ_API_KEY}`
+                'Authorization': `Bearer ${GROQ_API_KEY}`
             },
             body: JSON.stringify({
                 model: 'llama-3.1-8b-instant',
