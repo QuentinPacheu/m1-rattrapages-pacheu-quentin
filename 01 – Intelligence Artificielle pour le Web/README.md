@@ -49,46 +49,12 @@ Application web de génération automatique de quiz utilisant l'intelligence art
 └── config.js           # Configuration de la clé API (à créer)
 ```
 
-### Fichiers détaillés
-
-- **`index.html`** : Structure HTML5 sémantique avec sections (config, loading, quiz, résultats)
-- **`script.js`** : Gestion des états, appels API Groq, parsing JSON robuste, interactions utilisateur
-- **`style.css`** : Design moderne avec dégradés, responsive design, animations CSS3, interface immersive
-- **`config.js`** : Stockage sécurisé de la clé API Groq (non inclus dans le repository)
-
 ## 🔧 Configuration Technique
 
 ### API Groq
 - **Modèle :** `llama-3.1-8b-instant`
 - **Endpoint :** `https://api.groq.com/openai/v1/chat/completions`
 - **Format :** JSON avec authentification Bearer Token
-
-
-### Parser JSON Robuste
-Le système inclut un parser renforcé pour gérer :
-- Marqueurs markdown (`json`, etc.)
-- Texte supplémentaire avant/après le JSON
-- Extraction sécurisée du contenu valide
-- Gestion d'erreurs avec messages explicites
-
-## 🎨 Design et UX
-
-### Thématique par Section
-- **Configuration :** Fond blanc/gris - Simplicité et clarté
-- **Loading :** Dégradé jaune - Anticipation et énergie
-- **Quiz :** Dégradé violet - Immersion et concentration
-- **Résultats :** Fond blanc - Analyse claire des performances
-
-### Interface Quiz Innovante
-- **Sélection visuelle :** Clics directs sur les réponses (radio buttons cachés)
-- **Lettres identificatrices :** A, B, C, D dans des cercles colorés
-- **Feedback immédiat :** Changement de couleur à la sélection
-- **Layout adaptatif :** 2 colonnes desktop, 1 colonne mobile
-
-### Responsive Design
-- **Desktop :** Layout 2 colonnes pour les réponses, animations hover
-- **Tablette :** Adaptation automatique selon l'orientation
-- **Mobile :** Layout 1 colonne, boutons pleine largeur, interactions tactiles
 
 
 ## 📱 Compatibilité
